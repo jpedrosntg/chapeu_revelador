@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O Chapéu Seletor Revela</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=IM+Fell+English&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; overflow:hidden; background:#14121a; font-family:'IM Fell English',serif; }
+  #card { position:fixed; left:50%; bottom:4vh; transform:translateX(-50%); width:min(92vw,620px);
+    box-sizing:border-box; padding:18px 22px; border-radius:10px; color:#3b2a14;
+    background:linear-gradient(#f4e4bc,#e3c98f); box-shadow:0 0 30px #000a, inset 0 0 40px #a8844a77; }
+  #fala { font-size:clamp(17px,4.2vw,22px); line-height:1.35; min-height:3em; }
+  #opcoes { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  #opcoes button { flex:1 1 45%; padding:12px; font:inherit; font-size:17px; cursor:pointer;
+    background:#5a1e1e; color:#f4e4bc; border:2px solid #c9a227; border-radius:8px; }
+  #opcoes button:hover { background:#7a2a2a; }
+  #reveal { position:fixed; inset:0; display:none; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; pointer-events:none; padding:20px; }
+  #reveal h1 { font-family:'Cinzel Decorative',serif; font-size:clamp(38px,11vw,110px); margin:0; color:#fff;
+    text-shadow:0 0 30px var(--cor),0 0 60px var(--cor); animation:pop 1.2s ease-out; }
+  #reveal p { color:#fff; font-size:clamp(18px,4.5vw,28px); text-shadow:0 0 10px #000; }
+  @keyframes pop { from { transform:scale(.2); opacity:0 } to { transform:scale(1); opacity:1 } }
+  .conf { position:fixed; top:-20px; width:10px; height:16px; animation:cai linear forwards; }
+  @keyframes cai { to { transform:translateY(110vh) rotate(720deg); } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="card"><div id="fala">Carregando...</div><div id="opcoes"></div></div>
+<div id="reveal"><h1 id="rTitulo"></h1><p id="rMsg"></p></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { createScene, addStool } from './cenario.js';
+import { loadHat, HAT_CONFIG } from './chapeu.js';
+
+const $ = (id) => document.getElementById(id);
+const dec = (s) => typeof s === 'string'
+  ? JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s), (c) => c.charCodeAt(0))))
+  : s;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const R = await (await fetch('roteiro.json', { cache: 'no-store' })).json();
+const final = dec(R.revelacao);
+
+// Cena
+const { renderer, scene, camera, controls, update } = createScene();
+camera.position.set(0, 2.5, 10);
+controls.target.set(0, 0.5, 0);
+controls.update();
+
+const brilho = new THREE.PointLight(0xffd27a, 0, 9);
+brilho.position.set(0, 1, 2.5);
+scene.add(brilho);
+
+let hat = null;
+try {
+  hat = await loadHat(scene, { ...HAT_CONFIG, openAngle: HAT_CONFIG.openAngle * 0.5 });
+  addStool(scene, hat.bottomY);
+} catch (e) { console.error(e); }
+
+// Fala
+let falando = false, revelado = false, vozOn = false, amount = 0;
+
+function voz(txt) {
+  if (!vozOn || !window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(txt);
+  u.lang = 'pt-BR'; u.rate = 0.9; u.pitch = 0.6;
+  speechSynthesis.speak(u);
+}
+
+async function dizer(txt) {
+  $('opcoes').innerHTML = '';
+  falando = true;
+  voz(txt);
+  const el = $('fala');
+  el.textContent = '';
+  for (const ch of txt) {
+    el.textContent += ch;
+    await sleep('.?!…'.includes(ch) ? 250 : 35);
+  }
+  falando = false;
+}
+
+function escolher(lista) {
+  return new Promise((res) => {
+    for (const o of lista) {
+      const b = document.createElement('button');
+      b.textContent = o.texto;
+      b.onclick = () => res(o);
+      $('opcoes').append(b);
+    }
+  });
+}
+
+async function rodar() {
+  $('fala').textContent = R.titulo;
+  const ini = await escolher([{ texto: '🎩 Começar com voz', voz: true }, { texto: 'Começar sem som' }]);
+  vozOn = !!ini.voz;
+
+  for (const p of R.passos) {
+    await dizer(p.texto);
+    if (p.opcoes?.length) {
+      const o = await escolher(p.opcoes);
+      if (o.reacao) { await dizer(o.reacao); await escolher([{ texto: 'Continuar' }]); }
+    } else {
+      await escolher([{ texto: 'Continuar' }]);
+    }
+  }
+  for (const s of R.suspense) { await dizer(s); await sleep(1100); }
+  revelar();
+}
+
+function revelar() {
+  revelado = true;
+  $('card').style.display = 'none';
+  const r = $('reveal');
+  r.style.setProperty('--cor', final.cor);
+  r.style.display = 'flex';
+  $('rTitulo').textContent = final.titulo;
+  $('rMsg').textContent = final.mensagem;
+  brilho.color.set(final.cor);
+  brilho.intensity = 40;
+  voz(final.titulo);
+  for (let i = 0; i < 140; i++) {
+    const c = document.createElement('div');
+    c.className = 'conf';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = Math.random() < 0.7 ? final.cor : '#ffd700';
+    c.style.animationDuration = 2 + Math.random() * 3 + 's';
+    c.style.animationDelay = Math.random() * 2 + 's';
+    document.body.append(c);
+  }
+}
+
+// Loop
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  const alvo = falando ? Math.abs(Math.sin(t * 9)) * (0.55 + 0.45 * Math.sin(t * 2.7 + 1)) : 0;
+  amount += (alvo - amount) * 0.25;
+  if (hat) hat.setMouth(amount);
+  if (!revelado) brilho.intensity = 2 + 6 * amount;
+  update(t);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+rodar();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "titulo": "O Chapéu Seletor guarda um segredo...",
+  "passos": [
+    { "texto": "Ahh... mais uma cabeça curiosa diante de mim. Não se acanhe: já li pensamentos de bruxos bem mais nervosos que você.", "opcoes": [] },
+    { "texto": "Hoje não vim escolher casas. Vim guardar um segredo... um segredo tão pequenininho que ainda nem nasceu.", "opcoes": [] },
+    { "texto": "Diga-me: quando imagina esse bebê, o que vê primeiro?", "opcoes": [
+      { "texto": "Um sorriso travesso", "reacao": "Travesso, é? Conheço bem os travessos. Há séculos eles tentam me esconder no armário." },
+      { "texto": "Bochechas apertáveis", "reacao": "Bochechas... sim, sim. Uma arma poderosíssima contra avós." },
+      { "texto": "Um pequeno explorador", "reacao": "Explorador! Espero que não comece pela Floresta Proibida." }
+    ]},
+    { "texto": "Se uma coruja chegasse hoje com a carta de Hogwarts, em que casa você apostaria?", "opcoes": [
+      { "texto": "Grifinória", "reacao": "Coragem logo no berço... ousado." },
+      { "texto": "Sonserina", "reacao": "Ambicioso desde a fralda. Interessante." },
+      { "texto": "Corvinal", "reacao": "Uma mente afiada antes do primeiro dente." },
+      { "texto": "Lufa-Lufa", "reacao": "Leal e bondoso. Os melhores abraços vêm de lá." }
+    ]},
+    { "texto": "Que poção os futuros pais vão precisar com mais urgência?", "opcoes": [
+      { "texto": "Poção do Sono Profundo", "reacao": "Hah! Essa acaba em três semanas." },
+      { "texto": "Felix Felicis", "reacao": "Sorte ajuda, mas paciência ajuda mais." },
+      { "texto": "Poção Troca-Fraldas", "reacao": "Se ela existisse, eu mesmo a teria vendido." }
+    ]},
+    { "texto": "E você... aposta em quê?", "opcoes": [
+      { "texto": "Menina", "reacao": "Hmm... anotado. Mas guardarei minha opinião debaixo da aba." },
+      { "texto": "Menino", "reacao": "Hmm... anotado. Mas guardarei minha opinião debaixo da aba." }
+    ]},
+    { "texto": "Que fique claro: suas respostas não decidem nada. Isso a natureza já resolveu. Eu apenas... sei ler.", "opcoes": [] }
+  ],
+  "suspense": [
+    "Hmm... que dilema delicioso...",
+    "Vejo coragem... vejo uma risada que vai ecoar por este salão...",
+    "Sim... sim! Já sei!"
+  ],
+  "revelacao": {
+    "sexo": "menina",
+    "titulo": "É UMA MENINA!",
+    "mensagem": "O castelo inteiro já espera por você. Bem-vinda à família!",
+    "cor": "#ff7eb6"
+  }
+}
