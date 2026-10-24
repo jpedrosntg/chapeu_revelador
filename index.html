@@ -28,8 +28,8 @@
   @keyframes sobe { to { transform:translate(30px,-55vh); opacity:0 } }
   #halo { position:fixed; left:50%; top:32vh; width:80vh; height:80vh; transform:translate(-50%,-50%); border-radius:50%;
     background:radial-gradient(var(--h,#ffd27a),transparent 62%); opacity:.18; pointer-events:none; transition:opacity 1.5s; }
-  #chapeu { position:fixed; left:50%; top:5vh; height:min(54vh,95vw); transform:translateX(-50%);
-    filter:drop-shadow(0 18px 22px #000c); }
+  #palco { position:fixed; left:0; right:0; top:1vh; height:64vh; pointer-events:none; }
+  #palco canvas { display:block; width:100% !important; height:100% !important; }
   #card { position:fixed; left:50%; bottom:4vh; transform:translateX(-50%); width:min(92vw,620px);
     box-sizing:border-box; padding:18px 22px; border-radius:10px; color:#3b2a14;
     background:linear-gradient(#f4e4bc,#e3c98f); box-shadow:0 0 30px #000a, inset 0 0 40px #a8844a77; }
@@ -47,37 +47,26 @@
   .conf { position:fixed; top:-20px; width:10px; height:16px; animation:cai linear forwards; }
   @keyframes cai { to { transform:translateY(110vh) rotate(720deg); } }
 </style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
 </head>
 <body>
 <div id="cena"></div>
 <div id="fx"></div>
 <div id="halo"></div>
-
-<svg id="chapeu" viewBox="0 0 300 340">
-  <defs>
-    <linearGradient id="couro" x1="0" x2="1">
-      <stop offset="0" stop-color="#3a2614"/><stop offset=".45" stop-color="#7a5532"/><stop offset="1" stop-color="#2a1a0c"/>
-    </linearGradient>
-  </defs>
-  <rect x="95" y="300" width="110" height="14" rx="6" fill="#4a2e18"/>
-  <rect x="135" y="312" width="30" height="28" fill="#3a2312"/>
-  <g id="corpo">
-    <ellipse cx="150" cy="292" rx="140" ry="26" fill="#3d2914"/>
-    <ellipse cx="150" cy="288" rx="128" ry="18" fill="#5a3c22"/>
-    <path d="M68 288C80 220 95 160 118 120C135 88 140 60 170 38C195 22 230 26 250 40C222 40 200 52 192 78C186 100 196 140 205 175C215 215 228 255 232 288Z" fill="url(#couro)"/>
-    <path d="M120 120q30 10 70-6M100 182q50 14 100-4M88 245q60 12 128-2M150 60q8 14 30 12" stroke="#2a1a0c" stroke-width="4" fill="none" opacity=".6"/>
-    <path d="M72 268q78 22 158 0l2 18q-80 22-162 0z" fill="#2a1a0c"/>
-    <path d="M106 145q22-14 42-2M158 143q22-12 44 4" stroke="#24160a" stroke-width="5" fill="none" stroke-linecap="round"/>
-    <path d="M112 162q18-14 34 2M160 164q18-16 36 0" stroke="#140a04" stroke-width="7" fill="none" stroke-linecap="round"/>
-    <ellipse id="boca" cx="152" cy="216" rx="34" ry="3" fill="#120a04"/>
-    <path d="M114 212q38-9 76 0" stroke="#24160a" stroke-width="5" fill="none" stroke-linecap="round"/>
-  </g>
-</svg>
+<div id="palco"></div>
 
 <div id="card"><div id="fala">Carregando...</div><div id="opcoes"></div></div>
 <div id="reveal"><h1 id="rTitulo"></h1><p id="rMsg"></p></div>
 
 <script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { loadHat, HAT_CONFIG } from './chapeu.js';
+
 const $ = (id) => document.getElementById(id);
 const dec = (s) => typeof s === 'string'
   ? JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s), (c) => c.charCodeAt(0))))
@@ -126,7 +115,7 @@ function arvores(n, base, hMin, hMax, cor, seed) {
 
 const TEMAS = {
   salao: {
-    halo: '#ffd27a', ceu: 28, part: null,
+    halo: '#ffd27a', rim: 0x9a7bff, ceu: 28, part: null,
     svg: () => svg(tijolos('#3d3346') + vidro + luz('#ffb35a') +
       `<linearGradient id="ceuG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050818"/><stop offset="1" stop-color="#1e2a5c"/></linearGradient>`,
       `<rect width="1600" height="900" fill="url(#ceuG)"/>
@@ -140,7 +129,7 @@ const TEMAS = {
        <polygon points="1600,900 1600,760 1040,700 960,700 1300,900" fill="#5a3820" stroke="#2e1c10" stroke-width="4"/>`),
   },
   comunal: {
-    halo: '#ff9a4a', ceu: 0, part: 'brasa',
+    halo: '#ff9a4a', rim: 0xff7a30, ceu: 0, part: 'brasa',
     svg: () => svg(tijolos('#4a2424') + vidro + luz('#ff8a3a') +
       `<radialGradient id="fogo" cy=".8"><stop offset="0" stop-color="#fff3b0"/><stop offset=".4" stop-color="#ff9a1f"/><stop offset="1" stop-color="#b3260b" stop-opacity="0"/></radialGradient>`,
       `<rect width="1600" height="900" fill="#1d120c"/>
@@ -157,7 +146,7 @@ const TEMAS = {
        <ellipse cx="800" cy="840" rx="520" ry="55" fill="#7a1010" stroke="#d3a625" stroke-width="6"/>`),
   },
   floresta: {
-    halo: '#9be37a', ceu: 40, part: 'vagalume',
+    halo: '#9be37a', rim: 0x7ad1a0, ceu: 40, part: 'vagalume',
     svg: () => svg(luz('#7ad1a0') +
       `<linearGradient id="ceuG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#02040a"/><stop offset="1" stop-color="#12302e"/></linearGradient>
        <radialGradient id="lua"><stop offset=".5" stop-color="#f3efd2"/><stop offset="1" stop-color="#f3efd2" stop-opacity="0"/></radialGradient>
@@ -170,9 +159,9 @@ const TEMAS = {
        <path d="M0 800Q400 760 800 790T1600 780V900H0Z" fill="#050f0d"/>`),
   },
 };
+const T = TEMAS[CEN.tema] || TEMAS.salao;
 
 function montarCenario(c) {
-  const T = TEMAS[c.tema] || TEMAS.salao;
   if (c.imagem) document.body.style.backgroundImage = `url("${c.imagem.replace(/"/g, '')}")`;
   else $('cena').innerHTML = T.svg();
   $('halo').style.setProperty('--h', T.halo);
@@ -190,6 +179,68 @@ function montarCenario(c) {
     add('brasa', { left: 12 + rnd() * 12 + '%', bottom: '20%', animationDuration: 3 + rnd() * 3 + 's', animationDelay: -rnd() * 6 + 's' });
 }
 montarCenario(CEN);
+
+// ---------- Palco 3D (só o chapéu, fundo transparente) ----------
+const palco = $('palco');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(palco.clientWidth, palco.clientHeight);
+renderer.setClearColor(0x000000, 0);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+palco.append(renderer.domElement);
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.3;
+
+const camera = new THREE.PerspectiveCamera(32, palco.clientWidth / palco.clientHeight, 0.1, 100);
+
+scene.add(new THREE.HemisphereLight(0xffe2b8, 0x1a1420, 0.7));
+const key = new THREE.DirectionalLight(0xffd9a0, 2.2);
+key.position.set(3, 8, 5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.radius = 6;
+Object.assign(key.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 1, far: 30 });
+scene.add(key);
+const rim = new THREE.DirectionalLight(T.rim, 1.6);
+rim.position.set(-4, 4, -6);
+scene.add(rim);
+const brilho = new THREE.PointLight(0xffd27a, 0, 9);
+brilho.position.set(0, 1, 2.5);
+scene.add(brilho);
+
+function banquinho(topY, floorY) {
+  const mat = new THREE.MeshStandardMaterial({ color: 0x5a3a22, roughness: 0.7 });
+  const h = topY - floorY;
+  const peca = (geo, y) => {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.y = y; m.castShadow = m.receiveShadow = true; scene.add(m);
+  };
+  peca(new THREE.CylinderGeometry(0.9, 0.95, 0.22, 32), topY - 0.11);
+  peca(new THREE.CylinderGeometry(0.28, 0.4, h - 0.22, 16), floorY + (h - 0.22) / 2);
+  peca(new THREE.CylinderGeometry(0.7, 0.7, 0.12, 32), floorY + 0.06);
+}
+
+let hat = null;
+try {
+  hat = await loadHat(scene, { ...HAT_CONFIG, openAngle: HAT_CONFIG.openAngle * 0.5 });
+  const floorY = hat.bottomY - 1.4;
+  banquinho(hat.bottomY, floorY);
+  const chao = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.ShadowMaterial({ opacity: 0.45 }));
+  chao.rotation.x = -Math.PI / 2;
+  chao.position.y = floorY;
+  chao.receiveShadow = true;
+  scene.add(chao);
+  const meioY = (2 + floorY) / 2;
+  camera.position.set(0, meioY + 1.2, 11);
+  camera.lookAt(0, meioY, 0);
+} catch (e) { console.error(e); }
 
 // ---------- Fala ----------
 let falando = false, revelado = false, amount = 0;
@@ -243,6 +294,8 @@ function revelar() {
   $('rMsg').textContent = final.mensagem;
   $('halo').style.setProperty('--h', final.cor);
   $('halo').style.opacity = .85;
+  brilho.color.set(final.cor);
+  brilho.intensity = 40;
   for (let i = 0; i < 140; i++) {
     const c = document.createElement('div');
     c.className = 'conf';
@@ -254,19 +307,29 @@ function revelar() {
   }
 }
 
-// ---------- Animação do chapéu ----------
-const boca = $('boca'), corpo = $('corpo'), halo = $('halo');
-function animate(ms) {
+// ---------- Loop ----------
+const halo = $('halo');
+const clock = new THREE.Clock();
+function animate() {
   requestAnimationFrame(animate);
-  const t = ms / 1000;
+  const t = clock.getElapsedTime();
   const alvo = falando ? Math.abs(Math.sin(t * 9)) * (0.55 + 0.45 * Math.sin(t * 2.7 + 1)) : 0;
   amount += (alvo - amount) * 0.25;
-  boca.setAttribute('ry', 3 + 20 * amount);
-  corpo.setAttribute('transform', `rotate(${Math.sin(t * .8) * 1.5 + amount * 2} 150 290)`);
-  if (!revelado) halo.style.opacity = .18 + .25 * amount;
+  if (hat) hat.setMouth(amount);
+  if (!revelado) {
+    brilho.intensity = 2 + 6 * amount;
+    halo.style.opacity = .18 + .25 * amount;
+  }
+  renderer.render(scene, camera);
 }
-requestAnimationFrame(animate);
+animate();
 rodar();
+
+addEventListener('resize', () => {
+  camera.aspect = palco.clientWidth / palco.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(palco.clientWidth, palco.clientHeight);
+});
 </script>
 </body>
 </html>
