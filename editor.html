@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor do Roteiro (privado)</title>
+<style>
+  body { font-family:sans-serif; background:#14121a; color:#ddd; max-width:760px; margin:auto; padding:16px; }
+  fieldset { border:1px solid #444; border-radius:8px; margin:12px 0; }
+  input, textarea, select { width:100%; box-sizing:border-box; background:#2a2633; color:#fff;
+    border:1px solid #555; border-radius:4px; padding:6px; margin:4px 0 8px; font:inherit; }
+  textarea { min-height:60px; }
+  button { padding:10px 14px; border:0; border-radius:6px; background:#6b4fbb; color:#fff; cursor:pointer; margin:4px 4px 0 0; }
+  .sec { background:#3a3446; }
+  .small { font-size:12px; color:#999; }
+</style>
+</head>
+<body>
+<h2>Editor do roteiro</h2>
+<p class="small">Use apenas em localhost. Opções: uma por linha, no formato <b>Texto da opção | Reação do chapéu</b>. Sem opções = fala simples.</p>
+
+<label>Título inicial</label><input id="titulo">
+<div id="passos"></div>
+<button class="sec" id="add">+ Adicionar passo</button>
+
+<fieldset><legend>Suspense (uma fala por linha)</legend><textarea id="suspense"></textarea></fieldset>
+
+<fieldset><legend>Revelação 🔒</legend>
+  <select id="sexo"><option value="menina">Menina</option><option value="menino">Menino</option></select>
+  <label>Título</label><input id="rTitulo">
+  <label>Mensagem</label><textarea id="rMsg"></textarea>
+  <label>Cor</label><input type="color" id="rCor">
+</fieldset>
+
+<button id="exportar">Exportar roteiro.json</button>
+<span id="st" class="small"></span>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const enc = (o) => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(o))));
+const dec = (s) => typeof s === 'string'
+  ? JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s), (c) => c.charCodeAt(0))))
+  : s;
+const linhas = (s) => s.split('\n').map((l) => l.trim()).filter(Boolean);
+
+function addPasso(p = { texto: '', opcoes: [] }) {
+  const f = document.createElement('fieldset');
+  f.innerHTML = `<legend>Passo</legend>
+    <label>Fala / pergunta</label><textarea class="t"></textarea>
+    <label>Opções (Texto | Reação)</label><textarea class="o"></textarea>
+    <button class="sec up">↑ Subir</button><button class="sec rm">Remover</button>`;
+  f.querySelector('.t').value = p.texto;
+  f.querySelector('.o').value = (p.opcoes || [])
+    .map((o) => o.texto + (o.reacao ? ' | ' + o.reacao : '')).join('\n');
+  f.querySelector('.rm').onclick = () => f.remove();
+  f.querySelector('.up').onclick = () => {
+    if (f.previousElementSibling) f.parentNode.insertBefore(f, f.previousElementSibling);
+  };
+  $('passos').append(f);
+}
+
+$('add').onclick = () => addPasso();
+$('sexo').onchange = () => { $('rCor').value = $('sexo').value === 'menina' ? '#ff7eb6' : '#5aa9ff'; };
+
+fetch('roteiro.json', { cache: 'no-store' }).then((r) => r.json()).then((R) => {
+  $('titulo').value = R.titulo;
+  R.passos.forEach(addPasso);
+  $('suspense').value = R.suspense.join('\n');
+  const f = dec(R.revelacao);
+  $('sexo').value = f.sexo; $('rTitulo').value = f.titulo;
+  $('rMsg').value = f.mensagem; $('rCor').value = f.cor;
+});
+
+function montar() {
+  return {
+    titulo: $('titulo').value.trim(),
+    passos: [...document.querySelectorAll('#passos fieldset')].map((f) => ({
+      texto: f.querySelector('.t').value.trim(),
+      opcoes: linhas(f.querySelector('.o').value).map((l) => {
+        const [t, ...r] = l.split('|');
+        return { texto: t.trim(), reacao: r.join('|').trim() };
+      }),
+    })),
+    suspense: linhas($('suspense').value),
+    revelacao: enc({ sexo: $('sexo').value, titulo: $('rTitulo').value.trim(),
+                     mensagem: $('rMsg').value.trim(), cor: $('rCor').value }),
+  };
+}
+
+$('exportar').onclick = async () => {
+  const txt = JSON.stringify(montar(), null, 2);
+  try {
+    if (window.showSaveFilePicker) {
+      const h = await showSaveFilePicker({ suggestedName: 'roteiro.json',
+        types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+      const w = await h.createWritable(); await w.write(txt); await w.close();
+      $('st').textContent = ' Salvo!';
+    } else {
+      const a = Object.assign(document.createElement('a'),
+        { href: URL.createObjectURL(new Blob([txt], { type: 'application/json' })), download: 'roteiro.json' });
+      a.click();
+      $('st').textContent = ' Baixado. Mova para a pasta chapeu_3d.';
+    }
+  } catch (e) { if (e.name !== 'AbortError') console.error(e); }
+};
+</script>
+</body>
+</html>
