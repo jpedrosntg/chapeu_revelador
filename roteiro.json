@@ -30,6 +30,12 @@
     "Vejo coragem... vejo uma risada que vai ecoar por este salão...",
     "Sim... sim! Já sei!"
   ],
+  "cenario": {
+    "tema": "salao",
+    "imagem": "",
+    "velas": true,
+    "estrelas": true
+  },
   "revelacao": {
     "sexo": "menina",
     "titulo": "É UMA MENINA!",

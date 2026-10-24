@@ -6,7 +6,30 @@
 <title>O Chapéu Seletor Revela</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=IM+Fell+English&display=swap" rel="stylesheet">
 <style>
-  body { margin:0; overflow:hidden; background:#14121a; font-family:'IM Fell English',serif; }
+  body { margin:0; overflow:hidden; height:100vh; background:#0b0a14 center/cover no-repeat; font-family:'IM Fell English',serif; }
+  #cena { position:fixed; inset:0; width:100%; height:100%; }
+  #fx { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
+  .estrela { position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; box-shadow:0 0 4px #fff; animation:pisca 3s ease-in-out infinite; }
+  @keyframes pisca { 50% { opacity:.15 } }
+  .vela { position:absolute; width:10px; height:38px; border-radius:2px;
+    background:linear-gradient(90deg,#d9cba8,#fff8e6,#cdbf9c); animation:flutua 5s ease-in-out infinite; }
+  .vela::before { content:''; position:absolute; left:50%; top:-16px; width:9px; height:15px; transform:translateX(-50%);
+    background:radial-gradient(ellipse at 50% 70%,#fff 0 20%,#ffd36b 40%,#ff8a1f 70%,transparent 72%);
+    border-radius:50%/60% 60% 40% 40%; animation:chama .15s infinite alternate; }
+  .vela::after { content:''; position:absolute; left:50%; top:-40px; width:80px; height:80px; transform:translateX(-50%);
+    background:radial-gradient(#ffc85844,transparent 70%); }
+  @keyframes flutua { 50% { transform:translateY(-14px) } }
+  @keyframes chama { to { transform:translateX(-50%) scale(.85,1.1) } }
+  .vagalume { position:absolute; width:5px; height:5px; border-radius:50%; background:#d7ff8a;
+    box-shadow:0 0 10px 3px #c8ff5a99; animation:voa 7s ease-in-out infinite alternate; }
+  @keyframes voa { 33% { transform:translate(40px,-30px); opacity:.3 } 66% { transform:translate(-30px,-60px) } 100% { transform:translate(20px,10px); opacity:.7 } }
+  .brasa { position:absolute; width:4px; height:4px; border-radius:50%; background:#ffb347;
+    box-shadow:0 0 6px #ff7b00; animation:sobe linear infinite; }
+  @keyframes sobe { to { transform:translate(30px,-55vh); opacity:0 } }
+  #halo { position:fixed; left:50%; top:32vh; width:80vh; height:80vh; transform:translate(-50%,-50%); border-radius:50%;
+    background:radial-gradient(var(--h,#ffd27a),transparent 62%); opacity:.18; pointer-events:none; transition:opacity 1.5s; }
+  #chapeu { position:fixed; left:50%; top:5vh; height:min(54vh,95vw); transform:translateX(-50%);
+    filter:drop-shadow(0 18px 22px #000c); }
   #card { position:fixed; left:50%; bottom:4vh; transform:translateX(-50%); width:min(92vw,620px);
     box-sizing:border-box; padding:18px 22px; border-radius:10px; color:#3b2a14;
     background:linear-gradient(#f4e4bc,#e3c98f); box-shadow:0 0 30px #000a, inset 0 0 40px #a8844a77; }
@@ -24,61 +47,156 @@
   .conf { position:fixed; top:-20px; width:10px; height:16px; animation:cai linear forwards; }
   @keyframes cai { to { transform:translateY(110vh) rotate(720deg); } }
 </style>
-<script type="importmap">
-{ "imports": {
-  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-</script>
 </head>
 <body>
+<div id="cena"></div>
+<div id="fx"></div>
+<div id="halo"></div>
+
+<svg id="chapeu" viewBox="0 0 300 340">
+  <defs>
+    <linearGradient id="couro" x1="0" x2="1">
+      <stop offset="0" stop-color="#3a2614"/><stop offset=".45" stop-color="#7a5532"/><stop offset="1" stop-color="#2a1a0c"/>
+    </linearGradient>
+  </defs>
+  <rect x="95" y="300" width="110" height="14" rx="6" fill="#4a2e18"/>
+  <rect x="135" y="312" width="30" height="28" fill="#3a2312"/>
+  <g id="corpo">
+    <ellipse cx="150" cy="292" rx="140" ry="26" fill="#3d2914"/>
+    <ellipse cx="150" cy="288" rx="128" ry="18" fill="#5a3c22"/>
+    <path d="M68 288C80 220 95 160 118 120C135 88 140 60 170 38C195 22 230 26 250 40C222 40 200 52 192 78C186 100 196 140 205 175C215 215 228 255 232 288Z" fill="url(#couro)"/>
+    <path d="M120 120q30 10 70-6M100 182q50 14 100-4M88 245q60 12 128-2M150 60q8 14 30 12" stroke="#2a1a0c" stroke-width="4" fill="none" opacity=".6"/>
+    <path d="M72 268q78 22 158 0l2 18q-80 22-162 0z" fill="#2a1a0c"/>
+    <path d="M106 145q22-14 42-2M158 143q22-12 44 4" stroke="#24160a" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M112 162q18-14 34 2M160 164q18-16 36 0" stroke="#140a04" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <ellipse id="boca" cx="152" cy="216" rx="34" ry="3" fill="#120a04"/>
+    <path d="M114 212q38-9 76 0" stroke="#24160a" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
+
 <div id="card"><div id="fala">Carregando...</div><div id="opcoes"></div></div>
 <div id="reveal"><h1 id="rTitulo"></h1><p id="rMsg"></p></div>
 
 <script type="module">
-import * as THREE from 'three';
-import { createScene, addStool } from './cenario.js';
-import { loadHat, HAT_CONFIG } from './chapeu.js';
-
 const $ = (id) => document.getElementById(id);
 const dec = (s) => typeof s === 'string'
   ? JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s), (c) => c.charCodeAt(0))))
   : s;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const rnd = Math.random;
 
-const R = await (await fetch('roteiro.json', { cache: 'no-store' })).json();
+// ---------- Roteiro (ou pré-visualização vinda do editor) ----------
+const prev = new URLSearchParams(location.search).has('preview') && localStorage.getItem('roteiroPreview');
+const R = prev ? JSON.parse(prev) : await (await fetch('roteiro.json', { cache: 'no-store' })).json();
 const final = dec(R.revelacao);
+const CEN = { tema: 'salao', imagem: '', velas: true, estrelas: true, ...(R.cenario || {}) };
 
-// Cena
-const { renderer, scene, camera, controls, update } = createScene();
-camera.position.set(0, 2.5, 10);
-controls.target.set(0, 0.5, 0);
-controls.update();
+// ---------- Peças do cenário (SVG) ----------
+const tijolos = (cor) => `<pattern id="tij" width="90" height="44" patternUnits="userSpaceOnUse">
+  <rect width="90" height="44" fill="${cor}"/>
+  <path d="M0 1H90M0 23H90M45 1V23M1 23V44" stroke="#0008" stroke-width="2.5"/></pattern>`;
+const arco = (x, y, w, h) =>
+  `M${x} ${y + h}V${y + h * .35}Q${x} ${y + h * .08} ${x + w / 2} ${y}Q${x + w} ${y + h * .08} ${x + w} ${y + h * .35}V${y + h}Z`;
+const janela = (x, y, w, h) => `<path d="${arco(x, y, w, h)}" fill="url(#vidro)" stroke="#24180f" stroke-width="12"/>
+  <path d="M${x + w / 2} ${y + 8}V${y + h}M${x} ${y + h * .55}H${x + w}M${x} ${y + h * .8}H${x + w}" stroke="#24180f" stroke-width="5"/>`;
+const estandarte = (x, y, cor, borda, simb, w = 140, h = 300) => `
+  <rect x="${x - 10}" y="${y - 8}" width="${w + 20}" height="10" rx="4" fill="#3b2a18"/>
+  <path d="M${x} ${y}h${w}v${h}l-${w / 2} ${w * .32}l-${w / 2}-${w * .32}Z" fill="${cor}" stroke="${borda}" stroke-width="6"/>
+  <path d="M${x + 14} ${y + 14}h${w - 28}v${h - 30}l-${w / 2 - 14} ${w * .26}l-${w / 2 - 14}-${w * .26}Z" fill="none" stroke="${borda}" stroke-width="2" opacity=".7"/>
+  <text x="${x + w / 2}" y="${y + h * .58}" font-size="${w * .57}" text-anchor="middle">${simb}</text>`;
+const CASAS = [['#740001', '#d3a625', '🦁'], ['#1a472a', '#c0c0c0', '🐍'], ['#0e1a40', '#b08d57', '🦅'], ['#ecb939', '#372e29', '🦡']];
+const vidro = `<radialGradient id="vidro"><stop offset="0" stop-color="#a9cbff"/><stop offset="1" stop-color="#26457f"/></radialGradient>`;
+const luz = (cor) => `<radialGradient id="luz" cx=".5" cy=".55" r=".6"><stop offset="0" stop-color="${cor}" stop-opacity=".35"/><stop offset="1" stop-opacity="0"/></radialGradient>`;
+const svg = (defs, corpo) => `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" width="100%" height="100%">
+  <defs>${defs}</defs>${corpo}<rect width="1600" height="900" fill="url(#luz)"/></svg>`;
 
-const brilho = new THREE.PointLight(0xffd27a, 0, 9);
-brilho.position.set(0, 1, 2.5);
-scene.add(brilho);
-
-let hat = null;
-try {
-  hat = await loadHat(scene, { ...HAT_CONFIG, openAngle: HAT_CONFIG.openAngle * 0.5 });
-  addStool(scene, hat.bottomY);
-} catch (e) { console.error(e); }
-
-// Fala
-let falando = false, revelado = false, vozOn = false, amount = 0;
-
-function voz(txt) {
-  if (!vozOn || !window.speechSynthesis) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(txt);
-  u.lang = 'pt-BR'; u.rate = 0.9; u.pitch = 0.6;
-  speechSynthesis.speak(u);
+function arvores(n, base, hMin, hMax, cor, seed) {
+  let s = '', x = seed;
+  for (let i = 0; i < n; i++) {
+    x = (x * 9301 + 49297) % 233280;
+    const px = (i / n) * 1700 - 50 + (x % 60), h = hMin + (x % (hMax - hMin));
+    for (let k = 0; k < 3; k++) {
+      const y = base - h * k * .28, w = h * (.32 - k * .07);
+      s += `<path d="M${px} ${y - h * .45}L${px + w} ${y}L${px - w} ${y}Z" fill="${cor}"/>`;
+    }
+    s += `<rect x="${px - 6}" y="${base}" width="12" height="${900 - base}" fill="${cor}"/>`;
+  }
+  return s;
 }
+
+const TEMAS = {
+  salao: {
+    halo: '#ffd27a', ceu: 28, part: null,
+    svg: () => svg(tijolos('#3d3346') + vidro + luz('#ffb35a') +
+      `<linearGradient id="ceuG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050818"/><stop offset="1" stop-color="#1e2a5c"/></linearGradient>`,
+      `<rect width="1600" height="900" fill="url(#ceuG)"/>
+       <rect y="280" width="1600" height="620" fill="url(#tij)"/>
+       ${[...Array(9)].map((_, i) => `<path d="M${i * 200 - 100} 285Q${i * 200} 110 ${i * 200 + 100} 285" stroke="#241c2c" stroke-width="18" fill="none"/>`).join('')}
+       <rect y="272" width="1600" height="18" fill="#241c2c"/>
+       ${janela(120, 330, 170, 380)}${janela(1310, 330, 170, 380)}
+       ${CASAS.map(([c, b, s], i) => estandarte(490 + i * 160, 310, c, b, s)).join('')}
+       <rect y="720" width="1600" height="180" fill="#251c22"/>
+       <polygon points="0,900 0,760 560,700 640,700 300,900" fill="#5a3820" stroke="#2e1c10" stroke-width="4"/>
+       <polygon points="1600,900 1600,760 1040,700 960,700 1300,900" fill="#5a3820" stroke="#2e1c10" stroke-width="4"/>`),
+  },
+  comunal: {
+    halo: '#ff9a4a', ceu: 0, part: 'brasa',
+    svg: () => svg(tijolos('#4a2424') + vidro + luz('#ff8a3a') +
+      `<radialGradient id="fogo" cy=".8"><stop offset="0" stop-color="#fff3b0"/><stop offset=".4" stop-color="#ff9a1f"/><stop offset="1" stop-color="#b3260b" stop-opacity="0"/></radialGradient>`,
+      `<rect width="1600" height="900" fill="#1d120c"/>
+       <rect y="160" width="1600" height="740" fill="url(#tij)"/>
+       <rect y="150" width="1600" height="20" fill="#3a2414"/>
+       <rect x="90" y="430" width="380" height="330" fill="#6b5a4e" stroke="#3a3029" stroke-width="8"/>
+       <rect x="70" y="410" width="420" height="30" fill="#4e3f35"/>
+       <path d="${arco(150, 500, 260, 260)}" fill="#120806"/>
+       <ellipse cx="280" cy="720" rx="100" ry="70" fill="url(#fogo)"><animate attributeName="ry" values="70;85;65;70" dur="1.2s" repeatCount="indefinite"/></ellipse>
+       ${estandarte(600, 220, '#740001', '#d3a625', '🦁', 170, 360)}
+       ${estandarte(840, 220, '#740001', '#d3a625', '🦁', 170, 360)}
+       ${janela(1250, 260, 200, 420)}
+       <rect y="760" width="1600" height="140" fill="#2a1810"/>
+       <ellipse cx="800" cy="840" rx="520" ry="55" fill="#7a1010" stroke="#d3a625" stroke-width="6"/>`),
+  },
+  floresta: {
+    halo: '#9be37a', ceu: 40, part: 'vagalume',
+    svg: () => svg(luz('#7ad1a0') +
+      `<linearGradient id="ceuG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#02040a"/><stop offset="1" stop-color="#12302e"/></linearGradient>
+       <radialGradient id="lua"><stop offset=".5" stop-color="#f3efd2"/><stop offset="1" stop-color="#f3efd2" stop-opacity="0"/></radialGradient>
+       <linearGradient id="nevoa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fc9c0" stop-opacity="0"/><stop offset="1" stop-color="#9fc9c0" stop-opacity=".25"/></linearGradient>`,
+      `<rect width="1600" height="900" fill="url(#ceuG)"/>
+       <circle cx="1280" cy="150" r="140" fill="url(#lua)"/>
+       ${arvores(14, 640, 260, 420, '#0f2a26', 7)}
+       ${arvores(11, 760, 380, 560, '#081a17', 3)}
+       <rect y="600" width="1600" height="300" fill="url(#nevoa)"/>
+       <path d="M0 800Q400 760 800 790T1600 780V900H0Z" fill="#050f0d"/>`),
+  },
+};
+
+function montarCenario(c) {
+  const T = TEMAS[c.tema] || TEMAS.salao;
+  if (c.imagem) document.body.style.backgroundImage = `url("${c.imagem.replace(/"/g, '')}")`;
+  else $('cena').innerHTML = T.svg();
+  $('halo').style.setProperty('--h', T.halo);
+  const add = (cls, css) => {
+    const d = document.createElement('div');
+    d.className = cls; Object.assign(d.style, css); $('fx').append(d);
+  };
+  if (c.estrelas && T.ceu) for (let i = 0; i < 90; i++)
+    add('estrela', { left: rnd() * 100 + '%', top: rnd() * T.ceu + '%', animationDelay: -rnd() * 3 + 's', opacity: .4 + rnd() * .6 });
+  if (c.velas) for (let i = 0; i < 14; i++)
+    add('vela', { left: 3 + rnd() * 94 + '%', top: 5 + rnd() * 25 + '%', animationDelay: -rnd() * 5 + 's', scale: String(.6 + rnd() * .6) });
+  if (T.part === 'vagalume') for (let i = 0; i < 28; i++)
+    add('vagalume', { left: rnd() * 100 + '%', top: 40 + rnd() * 50 + '%', animationDelay: -rnd() * 7 + 's' });
+  if (T.part === 'brasa') for (let i = 0; i < 30; i++)
+    add('brasa', { left: 12 + rnd() * 12 + '%', bottom: '20%', animationDuration: 3 + rnd() * 3 + 's', animationDelay: -rnd() * 6 + 's' });
+}
+montarCenario(CEN);
+
+// ---------- Fala ----------
+let falando = false, revelado = false, amount = 0;
 
 async function dizer(txt) {
   $('opcoes').innerHTML = '';
   falando = true;
-  voz(txt);
   const el = $('fala');
   el.textContent = '';
   for (const ch of txt) {
@@ -101,9 +219,7 @@ function escolher(lista) {
 
 async function rodar() {
   $('fala').textContent = R.titulo;
-  const ini = await escolher([{ texto: '🎩 Começar com voz', voz: true }, { texto: 'Começar sem som' }]);
-  vozOn = !!ini.voz;
-
+  await escolher([{ texto: '🎩 Começar' }]);
   for (const p of R.passos) {
     await dizer(p.texto);
     if (p.opcoes?.length) {
@@ -125,41 +241,32 @@ function revelar() {
   r.style.display = 'flex';
   $('rTitulo').textContent = final.titulo;
   $('rMsg').textContent = final.mensagem;
-  brilho.color.set(final.cor);
-  brilho.intensity = 40;
-  voz(final.titulo);
+  $('halo').style.setProperty('--h', final.cor);
+  $('halo').style.opacity = .85;
   for (let i = 0; i < 140; i++) {
     const c = document.createElement('div');
     c.className = 'conf';
-    c.style.left = Math.random() * 100 + 'vw';
-    c.style.background = Math.random() < 0.7 ? final.cor : '#ffd700';
-    c.style.animationDuration = 2 + Math.random() * 3 + 's';
-    c.style.animationDelay = Math.random() * 2 + 's';
+    c.style.left = rnd() * 100 + 'vw';
+    c.style.background = rnd() < 0.7 ? final.cor : '#ffd700';
+    c.style.animationDuration = 2 + rnd() * 3 + 's';
+    c.style.animationDelay = rnd() * 2 + 's';
     document.body.append(c);
   }
 }
 
-// Loop
-const clock = new THREE.Clock();
-function animate() {
+// ---------- Animação do chapéu ----------
+const boca = $('boca'), corpo = $('corpo'), halo = $('halo');
+function animate(ms) {
   requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
+  const t = ms / 1000;
   const alvo = falando ? Math.abs(Math.sin(t * 9)) * (0.55 + 0.45 * Math.sin(t * 2.7 + 1)) : 0;
   amount += (alvo - amount) * 0.25;
-  if (hat) hat.setMouth(amount);
-  if (!revelado) brilho.intensity = 2 + 6 * amount;
-  update(t);
-  controls.update();
-  renderer.render(scene, camera);
+  boca.setAttribute('ry', 3 + 20 * amount);
+  corpo.setAttribute('transform', `rotate(${Math.sin(t * .8) * 1.5 + amount * 2} 150 290)`);
+  if (!revelado) halo.style.opacity = .18 + .25 * amount;
 }
-animate();
+requestAnimationFrame(animate);
 rodar();
-
-addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
 </script>
 </body>
 </html>
