@@ -180,7 +180,7 @@ function montarCenario(c) {
 }
 montarCenario(CEN);
 
-// ---------- Palco 3D (só o chapéu, fundo transparente) ----------
+// ---------- Palco 3D (só o chapéu flutuando, fundo transparente) ----------
 const palco = $('palco');
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -189,8 +189,6 @@ renderer.setClearColor(0x000000, 0);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 palco.append(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -199,14 +197,11 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 0.3;
 
 const camera = new THREE.PerspectiveCamera(32, palco.clientWidth / palco.clientHeight, 0.1, 100);
+const CAM = { y: 0.8, z: 11, alvoY: 0 };   // aumente z para o chapéu ficar menor
 
 scene.add(new THREE.HemisphereLight(0xffe2b8, 0x1a1420, 0.7));
 const key = new THREE.DirectionalLight(0xffd9a0, 2.2);
 key.position.set(3, 8, 5);
-key.castShadow = true;
-key.shadow.mapSize.set(2048, 2048);
-key.shadow.radius = 6;
-Object.assign(key.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 1, far: 30 });
 scene.add(key);
 const rim = new THREE.DirectionalLight(T.rim, 1.6);
 rim.position.set(-4, 4, -6);
@@ -215,31 +210,9 @@ const brilho = new THREE.PointLight(0xffd27a, 0, 9);
 brilho.position.set(0, 1, 2.5);
 scene.add(brilho);
 
-function banquinho(topY, floorY) {
-  const mat = new THREE.MeshStandardMaterial({ color: 0x5a3a22, roughness: 0.7 });
-  const h = topY - floorY;
-  const peca = (geo, y) => {
-    const m = new THREE.Mesh(geo, mat);
-    m.position.y = y; m.castShadow = m.receiveShadow = true; scene.add(m);
-  };
-  peca(new THREE.CylinderGeometry(0.9, 0.95, 0.22, 32), topY - 0.11);
-  peca(new THREE.CylinderGeometry(0.28, 0.4, h - 0.22, 16), floorY + (h - 0.22) / 2);
-  peca(new THREE.CylinderGeometry(0.7, 0.7, 0.12, 32), floorY + 0.06);
-}
-
 let hat = null;
 try {
   hat = await loadHat(scene, { ...HAT_CONFIG, openAngle: HAT_CONFIG.openAngle * 0.5 });
-  const floorY = hat.bottomY - 1.4;
-  banquinho(hat.bottomY, floorY);
-  const chao = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.ShadowMaterial({ opacity: 0.45 }));
-  chao.rotation.x = -Math.PI / 2;
-  chao.position.y = floorY;
-  chao.receiveShadow = true;
-  scene.add(chao);
-  const meioY = (2 + floorY) / 2;
-  camera.position.set(0, meioY + 1.2, 11);
-  camera.lookAt(0, meioY, 0);
 } catch (e) { console.error(e); }
 
 // ---------- Fala ----------
@@ -320,6 +293,10 @@ function animate() {
     brilho.intensity = 2 + 6 * amount;
     halo.style.opacity = .18 + .25 * amount;
   }
+  // Flutuação: a câmera oscila de leve, dando a impressão de que o chapéu paira no ar
+  const sobe = Math.sin(t * 1.3) * 0.22;
+  camera.position.set(Math.sin(t * 0.6) * 0.35, CAM.y - sobe, CAM.z);
+  camera.lookAt(0, CAM.alvoY - sobe, 0);
   renderer.render(scene, camera);
 }
 animate();
